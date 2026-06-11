@@ -1,36 +1,37 @@
-import { Trophy, Facebook, Instagram, Twitter, Youtube } from 'lucide-react';
+import { Facebook, Instagram, Trophy, Twitter, Youtube } from 'lucide-react';
+import type { Page } from '../App';
 
 interface FooterProps {
-  onNavigate: (page: 'home' | 'trials') => void;
+  onNavigate: (page: Page) => void;
 }
 
 export function Footer({ onNavigate }: FooterProps) {
   const links = {
     plataforma: [
-      { label: 'Cursos', action: () => onNavigate('home') },
-      { label: 'Testes em Clubes', action: () => onNavigate('trials') },
-      { label: 'Recursos', action: () => onNavigate('home') },
-      { label: 'Comunidade', action: () => onNavigate('home') }
+      { label: 'Cursos', page: 'resources' as Page },
+      { label: 'Testes em Clubes', page: 'trials' as Page },
+      { label: 'Perfil do Atleta', page: 'dashboard' as Page },
+      { label: 'Comunidade', page: 'resources' as Page },
     ],
     suporte: [
-      { label: 'Central de Ajuda', action: () => {} },
-      { label: 'Contato', action: () => {} },
-      { label: 'FAQ', action: () => {} },
-      { label: 'Termos de Uso', action: () => {} }
+      { label: 'Central de Ajuda', page: 'support' as Page },
+      { label: 'Contato', page: 'support' as Page },
+      { label: 'FAQ', page: 'support' as Page },
+      { label: 'Termos de Uso', page: 'legal' as Page },
     ],
     empresa: [
-      { label: 'Sobre Nós', action: () => {} },
-      { label: 'Instrutores', action: () => {} },
-      { label: 'Parceiros', action: () => {} },
-      { label: 'Carreiras', action: () => {} }
+      { label: 'Sobre Nós', page: 'about' as Page },
+      { label: 'Pais e Responsáveis', page: 'parents' as Page },
+      { label: 'Clubes e Olheiros', page: 'clubs' as Page },
+      { label: 'Parceiros', page: 'about' as Page },
     ],
   };
 
   const socialLinks = [
-    { icon: Facebook, href: '#', label: 'Facebook' },
-    { icon: Instagram, href: '#', label: 'Instagram' },
-    { icon: Twitter, href: '#', label: 'Twitter' },
-    { icon: Youtube, href: '#', label: 'YouTube' },
+    { icon: Facebook, href: 'https://facebook.com', label: 'Facebook' },
+    { icon: Instagram, href: 'https://instagram.com', label: 'Instagram' },
+    { icon: Twitter, href: 'https://x.com', label: 'Twitter' },
+    { icon: Youtube, href: 'https://youtube.com', label: 'YouTube' },
   ];
 
   return (
@@ -43,7 +44,8 @@ export function Footer({ onNavigate }: FooterProps) {
               <span className="font-bold text-xl">FuturoCraque</span>
             </div>
             <p className="text-sm text-muted-foreground mb-4">
-              Transformando aspirantes em jogadores profissionais através de educação de qualidade e acesso democratizado ao conhecimento do futebol.
+              Plataforma de formação para jovens atletas, com treinos, perfil esportivo, recursos,
+              segurança para menores e oportunidades verificadas.
             </p>
             <div className="flex items-center gap-3">
               {socialLinks.map((social) => {
@@ -52,6 +54,8 @@ export function Footer({ onNavigate }: FooterProps) {
                   <a
                     key={social.label}
                     href={social.href}
+                    target="_blank"
+                    rel="noreferrer"
                     aria-label={social.label}
                     className="p-2 rounded-lg bg-background border hover:bg-accent hover:border-primary transition-colors"
                   >
@@ -62,60 +66,34 @@ export function Footer({ onNavigate }: FooterProps) {
             </div>
           </div>
 
-          <div>
-            <h4 className="mb-4">Plataforma</h4>
-            <ul className="space-y-2">
-              {links.plataforma.map((link) => (
-                <li key={link.label}>
-                  <button onClick={link.action} className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                    {link.label}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="mb-4">Suporte</h4>
-            <ul className="space-y-2">
-              {links.suporte.map((link) => (
-                <li key={link.label}>
-                  <button onClick={link.action} className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                    {link.label}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="mb-4">Empresa</h4>
-            <ul className="space-y-2">
-              {links.empresa.map((link) => (
-                <li key={link.label}>
-                  <button onClick={link.action} className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                    {link.label}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {Object.entries(links).map(([group, items]) => (
+            <div key={group}>
+              <h4 className="mb-4 capitalize">{group}</h4>
+              <ul className="space-y-2">
+                {items.map((link) => (
+                  <li key={link.label}>
+                    <button onClick={() => onNavigate(link.page)} className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                      {link.label}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
 
         <div className="pt-8 border-t flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-muted-foreground">
-            © 2026 FuturoCraque. Todos os direitos reservados.
-          </p>
+          <p className="text-sm text-muted-foreground">© 2026 FuturoCraque. Todos os direitos reservados.</p>
           <div className="flex items-center gap-6">
-            <a href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+            <button onClick={() => onNavigate('legal')} className="text-sm text-muted-foreground hover:text-primary transition-colors">
               Privacidade
-            </a>
-            <a href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+            </button>
+            <button onClick={() => onNavigate('legal')} className="text-sm text-muted-foreground hover:text-primary transition-colors">
               Termos
-            </a>
-            <a href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+            </button>
+            <button onClick={() => onNavigate('legal')} className="text-sm text-muted-foreground hover:text-primary transition-colors">
               Cookies
-            </a>
+            </button>
           </div>
         </div>
       </div>

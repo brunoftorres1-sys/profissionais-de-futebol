@@ -240,11 +240,54 @@ const courseContent = {
   },
 };
 
+const buildDefaultContent = (course: Course) => ({
+  instructor: 'Equipe FuturoCraque',
+  instructorBio: 'Treinadores da plataforma com foco em desenvolvimento seguro por idade, posicao e nivel.',
+  students: 740,
+  rating: 4.7,
+  modules: [
+    {
+      id: 1,
+      title: `Primeiros passos em ${course.title}`,
+      lessons: [
+        { id: 1, title: 'Aquecimento e preparacao do treino', duration: '10:00', type: 'video' },
+        { id: 2, title: 'Fundamento principal da aula', duration: '18:00', type: 'video' },
+        { id: 3, title: 'Exercicio pratico guiado', duration: '15:00', type: 'exercise' },
+      ],
+    },
+    {
+      id: 2,
+      title: 'Aplicacao em situacao de jogo',
+      lessons: [
+        { id: 4, title: 'Como usar em treino coletivo', duration: '14:00', type: 'video' },
+        { id: 5, title: 'Checklist de evolucao semanal', duration: '08:00', type: 'document' },
+      ],
+    },
+  ],
+  learningObjectives: [
+    `Entender os fundamentos de ${course.title.toLowerCase()}`,
+    'Praticar com uma rotina simples e segura',
+    'Aplicar o conteudo em situacoes reais de jogo',
+    'Registrar evolucao para acompanhar o progresso',
+  ],
+  requirements: [
+    'Bola de futebol',
+    'Espaco seguro para treino',
+    'Agua e pausa para descanso',
+    'Autorizacao de responsavel para menores',
+  ],
+  benefits: [
+    'Conteudo liberado apos cadastro',
+    'Aulas organizadas por modulo',
+    'Exercicios praticos para repetir na semana',
+    'Material de apoio para acompanhar progresso',
+  ],
+});
+
 export function CourseDetailModal({ course, onClose }: CourseDetailModalProps) {
   const [activeModule, setActiveModule] = useState<number | null>(null);
-  const content = courseContent[course.id as keyof typeof courseContent];
-
-  if (!content) return null;
+  const [selectedLesson, setSelectedLesson] = useState<{ title: string; duration: string; type: string } | null>(null);
+  const content = courseContent[course.id as keyof typeof courseContent] ?? buildDefaultContent(course);
 
   return (
     <AnimatePresence>
@@ -423,9 +466,11 @@ export function CourseDetailModal({ course, onClose }: CourseDetailModalProps) {
                           >
                             <div className="p-4 space-y-2 bg-background">
                               {module.lessons.map((lesson) => (
-                                <div
+                                <button
                                   key={lesson.id}
-                                  className="flex items-center justify-between p-3 rounded-lg hover:bg-accent/50 transition-colors cursor-pointer"
+                                  type="button"
+                                  onClick={() => setSelectedLesson(lesson)}
+                                  className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-accent/50 transition-colors text-left"
                                 >
                                   <div className="flex items-center gap-3">
                                     {lesson.type === 'video' && <Play className="h-4 w-4 text-primary" />}
@@ -434,7 +479,7 @@ export function CourseDetailModal({ course, onClose }: CourseDetailModalProps) {
                                     <span className="text-sm">{lesson.title}</span>
                                   </div>
                                   <span className="text-xs text-muted-foreground">{lesson.duration}</span>
-                                </div>
+                                </button>
                               ))}
                             </div>
                           </motion.div>
@@ -443,6 +488,37 @@ export function CourseDetailModal({ course, onClose }: CourseDetailModalProps) {
                     </motion.div>
                   ))}
                 </div>
+                {selectedLesson && (
+                  <div className="mt-6 rounded-xl border border-primary/30 bg-primary/10 p-5">
+                    <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                      <div>
+                        <span className="text-xs font-bold uppercase text-primary">Aula aberta</span>
+                        <h3 className="mt-1">{selectedLesson.title}</h3>
+                        <p className="mt-2 text-sm text-muted-foreground">
+                          Duracao: {selectedLesson.duration}. Assista a orientacao, pratique o exercicio e registre como foi seu desempenho.
+                        </p>
+                      </div>
+                      <span className="rounded-full bg-background px-3 py-1 text-xs font-bold">
+                        {selectedLesson.type === 'video' ? 'Video' : selectedLesson.type === 'document' ? 'Material' : 'Exercicio'}
+                      </span>
+                    </div>
+
+                    <div className="mt-5 grid gap-4 md:grid-cols-3">
+                      <div className="rounded-lg border border-border bg-background/60 p-4">
+                        <h4 className="mb-2">Objetivo</h4>
+                        <p className="text-sm text-muted-foreground">Entender o movimento, repetir com controle e melhorar a tomada de decisao.</p>
+                      </div>
+                      <div className="rounded-lg border border-border bg-background/60 p-4">
+                        <h4 className="mb-2">Treino</h4>
+                        <p className="text-sm text-muted-foreground">Faca 3 series de 6 a 10 repeticoes, descansando 60 segundos entre as series.</p>
+                      </div>
+                      <div className="rounded-lg border border-border bg-background/60 p-4">
+                        <h4 className="mb-2">Conclusao</h4>
+                        <p className="text-sm text-muted-foreground">Anote dificuldade, acertos e o que precisa repetir no proximo treino.</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </motion.div>
 
               {/* Requisitos */}

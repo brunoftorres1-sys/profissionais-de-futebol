@@ -77,9 +77,10 @@ const courses: Course[] = [
 interface CourseGridProps {
   activeTab: string;
   onCourseClick: (course: Course) => void;
+  isAuthenticated: boolean;
 }
 
-export function CourseGrid({ activeTab, onCourseClick }: CourseGridProps) {
+export function CourseGrid({ activeTab, onCourseClick, isAuthenticated }: CourseGridProps) {
   const filteredCourses = activeTab === 'todos'
     ? courses
     : courses.filter(course => course.category === activeTab);
@@ -88,7 +89,10 @@ export function CourseGrid({ activeTab, onCourseClick }: CourseGridProps) {
     <section className="py-16">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCourses.map((course) => (
+          {filteredCourses.map((course) => {
+            const isLocked = Boolean(course.locked && !isAuthenticated);
+
+            return (
             <div
               key={course.id}
               className="group rounded-xl border bg-card overflow-hidden hover:shadow-lg transition-all"
@@ -99,12 +103,12 @@ export function CourseGrid({ activeTab, onCourseClick }: CourseGridProps) {
                   alt={course.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
-                {course.locked && (
+                {isLocked && (
                   <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center">
                     <Lock className="h-12 w-12 text-muted-foreground" />
                   </div>
                 )}
-                {course.progress !== undefined && course.progress > 0 && !course.locked && (
+                {course.progress !== undefined && course.progress > 0 && !isLocked && (
                   <div className="absolute top-3 right-3 bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs flex items-center gap-1">
                     <CheckCircle className="h-3 w-3" />
                     {course.progress}%
@@ -138,7 +142,7 @@ export function CourseGrid({ activeTab, onCourseClick }: CourseGridProps) {
                   </div>
                 </div>
 
-                {course.progress !== undefined && course.progress > 0 && !course.locked && (
+                {course.progress !== undefined && course.progress > 0 && !isLocked && (
                   <div className="mt-3">
                     <div className="w-full bg-muted rounded-full h-2">
                       <div
@@ -151,18 +155,19 @@ export function CourseGrid({ activeTab, onCourseClick }: CourseGridProps) {
 
                 <button
                   className={`w-full mt-4 px-4 py-2 rounded-lg transition-colors ${
-                    course.locked
+                    isLocked
                       ? 'bg-muted text-muted-foreground cursor-not-allowed'
                       : 'bg-primary text-primary-foreground hover:bg-primary/90'
                   }`}
-                  disabled={course.locked}
-                  onClick={() => !course.locked && onCourseClick(course)}
+                  disabled={isLocked}
+                  onClick={() => !isLocked && onCourseClick(course)}
                 >
-                  {course.locked ? 'Bloqueado' : course.progress ? 'Continuar' : 'Começar'}
+                  {isLocked ? 'Cadastre-se para liberar' : course.progress ? 'Continuar' : 'Começar'}
                 </button>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

@@ -18,7 +18,7 @@ import { ErrorPage } from './components/system/ErrorPages';
 import { logger } from '../lib/logger';
 import type { Course } from './components/CourseGrid';
 
-export type Page = 'home' | 'trials' | 'resources' | 'dashboard' | 'support' | 'about' | 'parents' | 'clubs' | 'legal' | 'notFound' | 'serverError';
+export type Page = 'home' | 'trials' | 'resources' | 'athletes' | 'dashboard' | 'support' | 'about' | 'parents' | 'clubs' | 'legal' | 'notFound' | 'serverError';
 export type UserRole = 'athlete' | 'coach' | 'scout';
 export interface AthleteSummary {
   name: string;
@@ -42,12 +42,14 @@ const defaultAthlete: AthleteSummary = {
 
 const AuthModal = lazy(() => import('./components/AuthModal').then((module) => ({ default: module.AuthModal })));
 const AthleteDashboard = lazy(() => import('./components/AthleteDashboard').then((module) => ({ default: module.AthleteDashboard })));
+const AthleteSearchPage = lazy(() => import('./components/AthleteSearchPage').then((module) => ({ default: module.AthleteSearchPage })));
 const ClubTrialsPage = lazy(() => import('./components/ClubTrialsPage').then((module) => ({ default: module.ClubTrialsPage })));
 const InfoPage = lazy(() => import('./components/InfoPage').then((module) => ({ default: module.InfoPage })));
 const ResourceHubPage = lazy(() => import('./components/ResourceHubPage').then((module) => ({ default: module.ResourceHubPage })));
 
 const pagePaths: Record<Page, string> = {
   about: '/sobre',
+  athletes: '/atletas',
   clubs: '/clubes',
   dashboard: '/dashboard',
   home: '/',
@@ -133,6 +135,7 @@ export default function App() {
       <Suspense fallback={<LoadingPage />}>
         {currentPage === 'trials' && <ClubTrialsPage />}
         {currentPage === 'resources' && <ResourceHubPage onCreateProfile={() => setAuthMode('signup')} />}
+        {currentPage === 'athletes' && <AthleteSearchPage currentRole={athlete.role} />}
         {currentPage === 'dashboard' && <AthleteDashboard athlete={athlete} onNavigateToTrials={() => navigate('trials')} />}
         {currentPage === 'support' && <InfoPage type="support" onCreateProfile={() => setAuthMode('signup')} />}
         {currentPage === 'about' && <InfoPage type="about" onCreateProfile={() => setAuthMode('signup')} />}

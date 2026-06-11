@@ -9,6 +9,7 @@ export function Footer({ onNavigate }: FooterProps) {
   const links = {
     plataforma: [
       { label: 'Cursos', page: 'resources' as Page },
+      { label: 'Buscar Atletas', page: 'athletes' as Page },
       { label: 'Testes em Clubes', page: 'trials' as Page },
       { label: 'Perfil do Atleta', page: 'dashboard' as Page },
       { label: 'Comunidade', page: 'resources' as Page },

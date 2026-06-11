@@ -10,6 +10,11 @@ const pageMeta: Record<Page, { description: string; title: string; path: string 
     path: '/sobre',
     title: 'Sobre o FuturoCraque',
   },
+  athletes: {
+    description: 'Busque atletas por posicao, cidade e nivel, salve favoritos e registre avaliacoes tecnicas.',
+    path: '/atletas',
+    title: 'Busca de atletas',
+  },
   clubs: {
     description: 'Perfis esportivos organizados para clubes, avaliadores e olheiros.',
     path: '/clubes',

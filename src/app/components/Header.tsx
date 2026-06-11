@@ -19,6 +19,7 @@ export function Header({ currentPage, onNavigate, onAuthOpen }: HeaderProps) {
   const navItems: Array<{ label: string; page: Page; icon?: typeof ClipboardCheck }> = [
     { label: 'Inicio', page: 'home' },
     { label: 'Cursos', page: 'resources' },
+    { label: 'Atletas', page: 'athletes' },
     { label: 'Area do atleta', page: 'dashboard' },
     { label: 'Pais', page: 'parents' },
     { label: 'Clubes', page: 'clubs' },

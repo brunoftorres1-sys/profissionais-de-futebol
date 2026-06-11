@@ -2,6 +2,14 @@ import { BarChart3, CalendarCheck, CheckCircle2, ClipboardList, Dumbbell, Extern
 import { useState } from 'react';
 import type { AthleteSummary } from '../App';
 import { logger } from '../../lib/logger';
+import {
+  listNotifications,
+  listUploadedVideos,
+  markNotificationRead,
+  saveUploadedVideo,
+  type NotificationItem,
+  type UploadedVideo,
+} from '../../lib/platform';
 
 interface AthleteDashboardProps {
   athlete: AthleteSummary;
@@ -31,7 +39,11 @@ const applications = [
 
 export function AthleteDashboard({ athlete, onNavigateToTrials }: AthleteDashboardProps) {
   const [profileMessage, setProfileMessage] = useState('');
+  const [videos, setVideos] = useState<UploadedVideo[]>(() => listUploadedVideos());
+  const [notifications, setNotifications] = useState<NotificationItem[]>(() => listNotifications());
+  const [uploadMessage, setUploadMessage] = useState('');
   const publicProfileUrl = `futurocraque.com/atleta/${athlete.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'perfil'}`;
+  const roleLabel = athlete.role === 'coach' ? 'Treinador' : athlete.role === 'scout' ? 'Olheiro' : 'Atleta';
 
   const shareProfile = async () => {
     try {
@@ -43,15 +55,36 @@ export function AthleteDashboard({ athlete, onNavigateToTrials }: AthleteDashboa
     }
   };
 
+  const uploadVideo = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    if (!file.type.startsWith('video/')) {
+      setUploadMessage('Envie um arquivo de video valido.');
+      return;
+    }
+
+    if (file.size > 100 * 1024 * 1024) {
+      setUploadMessage('O video precisa ter ate 100 MB nesta versao.');
+      return;
+    }
+
+    setVideos(saveUploadedVideo(file));
+    setUploadMessage('Video salvo no painel local. Com Supabase configurado, ele sera enviado para o Storage.');
+  };
+
   return (
     <main className="py-10 bg-muted/20 min-h-screen">
       <div className="container mx-auto px-4">
         <div className="mb-8 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-5">
           <div>
-            <span className="text-sm font-bold text-primary uppercase tracking-wide">Area do atleta</span>
+            <span className="text-sm font-bold text-primary uppercase tracking-wide">Area do {roleLabel.toLowerCase()}</span>
             <h1 className="mt-2 mb-2">Painel de evolucao de {athlete.name}</h1>
             <p className="text-muted-foreground max-w-3xl">
-              Acompanhe avaliacao inicial, plano de treino, metas, videos, perfil publico e inscricoes em testes.
+              Acompanhe avaliacao inicial, plano de treino, metas, videos, perfil publico, favoritos e notificacoes.
             </p>
           </div>
           <button
@@ -114,6 +147,31 @@ export function AthleteDashboard({ athlete, onNavigateToTrials }: AthleteDashboa
 
           <section className="bg-card border border-border rounded-xl p-6">
             <div className="flex items-center gap-2 mb-5">
+              <FileVideo className="h-6 w-6 text-primary" />
+              <h2 className="text-xl">Upload de videos</h2>
+            </div>
+            <label className="block rounded-xl border border-dashed border-primary/40 bg-primary/10 p-5 text-center cursor-pointer hover:bg-primary/15">
+              <input className="sr-only" type="file" accept="video/*" onChange={uploadVideo} />
+              <span className="font-bold">Selecionar video de treino ou lance</span>
+              <span className="mt-2 block text-sm text-muted-foreground">Formatos de video, ate 100 MB nesta versao.</span>
+            </label>
+            {uploadMessage && (
+              <p className="mt-3 rounded-lg bg-primary/10 p-3 text-sm text-muted-foreground" role="status">{uploadMessage}</p>
+            )}
+            <div className="mt-4 space-y-2">
+              {videos.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Nenhum video enviado ainda.</p>
+              ) : videos.map((video) => (
+                <div key={video.id} className="flex items-center justify-between gap-3 rounded-lg bg-muted/30 p-3 text-sm">
+                  <span className="truncate">{video.name}</span>
+                  <span className="shrink-0 text-muted-foreground">{Math.max(1, Math.round(video.size / 1024 / 1024))} MB</span>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="bg-card border border-border rounded-xl p-6">
+            <div className="flex items-center gap-2 mb-5">
               <ClipboardList className="h-6 w-6 text-primary" />
               <h2 className="text-xl">Avaliacao inicial</h2>
             </div>
@@ -163,6 +221,26 @@ export function AthleteDashboard({ athlete, onNavigateToTrials }: AthleteDashboa
                   <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
                   <span>{goal}</span>
                 </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="bg-card border border-border rounded-xl p-6">
+            <div className="flex items-center gap-2 mb-5">
+              <ShieldCheck className="h-6 w-6 text-primary" />
+              <h2 className="text-xl">Notificacoes</h2>
+            </div>
+            <div className="space-y-3">
+              {notifications.map((notification) => (
+                <button
+                  key={notification.id}
+                  type="button"
+                  onClick={() => setNotifications(markNotificationRead(notification.id))}
+                  className={`w-full rounded-lg border p-3 text-left text-sm transition-colors ${notification.read ? 'border-border bg-muted/20 text-muted-foreground' : 'border-primary/30 bg-primary/10'}`}
+                >
+                  <span className="block font-bold">{notification.title}</span>
+                  <span>{notification.text}</span>
+                </button>
               ))}
             </div>
           </section>

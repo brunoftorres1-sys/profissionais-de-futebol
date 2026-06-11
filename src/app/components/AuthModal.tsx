@@ -2,7 +2,7 @@ import { AlertCircle, Calendar, Lock, Mail, MapPin, ShieldCheck, Target, User, X
 import { useState } from 'react';
 import type { AthleteSummary, UserRole } from '../App';
 import { logger } from '../../lib/logger';
-import { getSupabaseConfigStatus } from '../../lib/supabase';
+import { getGoogleOAuthUrl, getSupabaseConfigStatus } from '../../lib/supabase';
 
 interface AuthModalProps {
   mode: 'login' | 'signup';
@@ -185,6 +185,11 @@ export function AuthModal({ mode, onModeChange, onClose, onSuccess }: AuthModalP
               type="button"
               onClick={() => {
                 logger.info('Login Google demonstrativo iniciado', { context: 'AuthModal' });
+                if (supabaseStatus.configured) {
+                  window.location.href = getGoogleOAuthUrl();
+                  return;
+                }
+
                 onSuccess({
                   name: 'Usuario Google',
                   age: '16',

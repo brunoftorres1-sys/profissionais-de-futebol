@@ -1,5 +1,7 @@
 import { BarChart3, CalendarCheck, CheckCircle2, ClipboardList, Dumbbell, ExternalLink, FileVideo, Flag, ShieldCheck, Target, Trophy, UserRound } from 'lucide-react';
+import { useState } from 'react';
 import type { AthleteSummary } from '../App';
+import { logger } from '../../lib/logger';
 
 interface AthleteDashboardProps {
   athlete: AthleteSummary;
@@ -28,7 +30,18 @@ const applications = [
 ];
 
 export function AthleteDashboard({ athlete, onNavigateToTrials }: AthleteDashboardProps) {
+  const [profileMessage, setProfileMessage] = useState('');
   const publicProfileUrl = `futurocraque.com/atleta/${athlete.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'perfil'}`;
+
+  const shareProfile = async () => {
+    try {
+      await navigator.clipboard.writeText(`https://${publicProfileUrl}`);
+      setProfileMessage('Link publico copiado para area de transferencia.');
+    } catch (error) {
+      setProfileMessage(`Link publico: ${publicProfileUrl}`);
+      logger.warn('Nao foi possivel copiar link publico', { context: 'AthleteDashboard', error });
+    }
+  };
 
   return (
     <main className="py-10 bg-muted/20 min-h-screen">
@@ -86,12 +99,17 @@ export function AthleteDashboard({ athlete, onNavigateToTrials }: AthleteDashboa
             </div>
 
             <button
-              onClick={() => window.alert(`Link publico demonstrativo: ${publicProfileUrl}`)}
+              onClick={shareProfile}
               className="mt-5 w-full px-4 py-3 rounded-lg border border-border font-bold hover:bg-accent transition-colors flex items-center justify-center gap-2"
             >
               <ExternalLink className="h-4 w-4" />
               Abrir link publico do perfil
             </button>
+            {profileMessage && (
+              <p className="mt-3 rounded-lg bg-primary/10 p-3 text-sm text-muted-foreground" role="status">
+                {profileMessage}
+              </p>
+            )}
           </section>
 
           <section className="bg-card border border-border rounded-xl p-6">

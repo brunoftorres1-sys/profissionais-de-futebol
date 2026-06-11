@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://profissionais-de-futebol.vercel.app/sitemap.xml

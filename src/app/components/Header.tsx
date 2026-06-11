@@ -28,7 +28,7 @@ export function Header({ currentPage, onNavigate, onAuthOpen }: HeaderProps) {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/98 backdrop-blur-md shadow-lg">
       <div className="container mx-auto px-4 flex h-20 items-center justify-between">
-        <button onClick={() => goTo('home')} className="flex items-center gap-3 group">
+        <button onClick={() => goTo('home')} className="flex items-center gap-3 group" aria-label="Ir para inicio">
           <div className="relative">
             <Trophy className="h-10 w-10 text-primary drop-shadow-[0_0_8px_rgba(0,200,83,0.5)]" />
             <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full" />
@@ -39,13 +39,14 @@ export function Header({ currentPage, onNavigate, onAuthOpen }: HeaderProps) {
           </div>
         </button>
 
-        <nav className="hidden xl:flex items-center gap-6">
+        <nav className="hidden xl:flex items-center gap-6" aria-label="Navegacao principal">
           {navItems.map((item) => {
             const Icon = item.icon;
             return (
               <button
                 key={item.label}
                 onClick={() => goTo(item.page)}
+                aria-current={currentPage === item.page ? 'page' : undefined}
                 className={`flex items-center gap-2 text-sm font-medium hover:text-primary transition-colors ${currentPage === item.page ? 'text-primary' : ''}`}
               >
                 {Icon && <Icon className="h-4 w-4" />}
@@ -69,19 +70,30 @@ export function Header({ currentPage, onNavigate, onAuthOpen }: HeaderProps) {
             <User className="h-4 w-4" />
             Entrar
           </button>
-          <button className="xl:hidden p-2" onClick={() => setIsMenuOpen(!isMenuOpen)} aria-label="Abrir menu">
+          <button
+            className="xl:hidden p-2"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            aria-controls="menu-mobile"
+            aria-expanded={isMenuOpen}
+            aria-label={isMenuOpen ? 'Fechar menu' : 'Abrir menu'}
+          >
             <Menu className="h-6 w-6" />
           </button>
         </div>
       </div>
 
       {isMenuOpen && (
-        <div className="xl:hidden border-t bg-card">
-          <nav className="container mx-auto px-4 py-4 flex flex-col gap-4">
+        <div id="menu-mobile" className="xl:hidden border-t bg-card">
+          <nav className="container mx-auto px-4 py-4 flex flex-col gap-4" aria-label="Navegacao mobile">
             {navItems.map((item) => {
               const Icon = item.icon;
               return (
-                <button key={item.label} onClick={() => goTo(item.page)} className="flex items-center gap-2 text-sm font-medium hover:text-primary transition-colors text-left">
+                <button
+                  key={item.label}
+                  onClick={() => goTo(item.page)}
+                  aria-current={currentPage === item.page ? 'page' : undefined}
+                  className="flex items-center gap-2 text-sm font-medium hover:text-primary transition-colors text-left"
+                >
                   {Icon && <Icon className="h-4 w-4" />}
                   {item.label}
                 </button>

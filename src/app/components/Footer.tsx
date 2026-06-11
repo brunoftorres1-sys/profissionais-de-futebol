@@ -55,7 +55,7 @@ export function Footer({ onNavigate }: FooterProps) {
                     key={social.label}
                     href={social.href}
                     target="_blank"
-                    rel="noreferrer"
+                    rel="noopener noreferrer"
                     aria-label={social.label}
                     className="p-2 rounded-lg bg-background border hover:bg-accent hover:border-primary transition-colors"
                   >

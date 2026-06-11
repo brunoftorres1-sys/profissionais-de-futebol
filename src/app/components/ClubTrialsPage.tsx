@@ -97,6 +97,7 @@ const clubTrials: ClubTrial[] = [
 
 export function ClubTrialsPage() {
   const [selectedTrial, setSelectedTrial] = useState<ClubTrial | null>(null);
+  const [successMessage, setSuccessMessage] = useState('');
   const [stateFilter, setStateFilter] = useState('Todos');
   const [cityFilter, setCityFilter] = useState('Todas');
   const [categoryFilter, setCategoryFilter] = useState('Todos');
@@ -116,7 +117,7 @@ export function ClubTrialsPage() {
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    alert('Inscrição registrada para demonstração. Na versão final, o atleta receberia protocolo e acompanhamento de status.');
+    setSuccessMessage('Inscricao registrada. Na versao final, o atleta recebera protocolo e acompanhamento de status.');
     setSelectedTrial(null);
   };
 
@@ -162,6 +163,13 @@ export function ClubTrialsPage() {
             canais oficiais, requisitos e autorização dos responsáveis.
           </p>
         </div>
+
+        {successMessage && (
+          <div className="mb-8 flex gap-3 rounded-xl border border-primary/30 bg-primary/10 p-4 text-sm" role="status">
+            <CheckCircle className="h-5 w-5 shrink-0 text-primary" />
+            <span>{successMessage}</span>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12">
           {filteredTrials.map((trial) => (

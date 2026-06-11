@@ -45,6 +45,11 @@ const pageMeta: Record<Page, { description: string; title: string; path: string 
     path: '/pais',
     title: 'Pais e responsaveis',
   },
+  publicProfile: {
+    description: 'Perfil publico de atleta com dados esportivos, videos, score e avaliacoes.',
+    path: '/atleta',
+    title: 'Perfil publico de atleta',
+  },
   resources: {
     description: 'Biblioteca de videos, guias, planos de treino e ferramentas para evolucao esportiva.',
     path: '/recursos',

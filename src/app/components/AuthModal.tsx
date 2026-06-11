@@ -2,7 +2,7 @@ import { AlertCircle, Calendar, Lock, Mail, MapPin, ShieldCheck, Target, User, X
 import { useState } from 'react';
 import type { AthleteSummary, UserRole } from '../App';
 import { logger } from '../../lib/logger';
-import { getGoogleOAuthUrl, getSupabaseConfigStatus } from '../../lib/supabase';
+import { getGoogleOAuthUrl, getSupabaseConfigStatus, signInWithPassword, signUpWithEmail } from '../../lib/supabase';
 
 interface AuthModalProps {
   mode: 'login' | 'signup';
@@ -57,7 +57,7 @@ export function AuthModal({ mode, onModeChange, onClose, onSuccess }: AuthModalP
 
           <form
             className="p-6 space-y-4"
-            onSubmit={(event) => {
+            onSubmit={async (event) => {
               event.preventDefault();
               setError('');
               setIsSubmitting(true);
@@ -71,12 +71,25 @@ export function AuthModal({ mode, onModeChange, onClose, onSuccess }: AuthModalP
               }
 
               if (!isSignup) {
+                if (supabaseStatus.configured) {
+                  try {
+                    await signInWithPassword(
+                      String(new FormData(event.currentTarget).get('email') || ''),
+                      String(new FormData(event.currentTarget).get('password') || ''),
+                    );
+                  } catch (authError) {
+                    setError('Nao foi possivel entrar. Confira email, senha e configuracao do Supabase.');
+                    setIsSubmitting(false);
+                    logger.error('Falha no login Supabase', { context: 'AuthModal', error: authError });
+                    return;
+                  }
+                }
                 onSuccess();
                 return;
               }
 
               const data = new FormData(event.currentTarget);
-              onSuccess({
+              const profile = {
                 name: String(data.get('athleteName') || 'Atleta'),
                 age: String(data.get('age') || ''),
                 position: String(data.get('position') || 'Atleta'),
@@ -84,7 +97,24 @@ export function AuthModal({ mode, onModeChange, onClose, onSuccess }: AuthModalP
                 level: String(data.get('level') || 'Em avaliacao'),
                 guardian: String(data.get('guardian') || 'Responsavel informado'),
                 role: String(data.get('role') || 'athlete') as UserRole,
-              });
+              };
+
+              if (supabaseStatus.configured) {
+                try {
+                  await signUpWithEmail(
+                    String(data.get('email') || ''),
+                    String(data.get('password') || ''),
+                    profile,
+                  );
+                } catch (authError) {
+                  setError('Nao foi possivel criar conta no Supabase. Verifique as variaveis e politicas do projeto.');
+                  setIsSubmitting(false);
+                  logger.error('Falha no cadastro Supabase', { context: 'AuthModal', error: authError });
+                  return;
+                }
+              }
+
+              onSuccess(profile);
             }}
             noValidate
           >

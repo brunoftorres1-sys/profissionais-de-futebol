@@ -168,7 +168,7 @@ export function AthleteSearchPage({ currentRole }: AthleteSearchPageProps) {
                       Avaliar atleta
                     </button>
                     <a
-                      href={`/#/atleta/${athlete.publicSlug}`}
+                      href={`/atleta/${athlete.publicSlug}`}
                       className="rounded-lg border border-border px-4 py-3 text-center font-bold hover:bg-accent"
                     >
                       Perfil publico

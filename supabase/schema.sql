@@ -1,5 +1,9 @@
 create extension if not exists "pgcrypto";
 
+insert into storage.buckets (id, name, public)
+values ('athlete-videos', 'athlete-videos', true)
+on conflict (id) do nothing;
+
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   role text not null check (role in ('athlete', 'coach', 'scout')),
@@ -99,3 +103,16 @@ create policy "Users update their notifications"
   on public.notifications for update
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
+
+create policy "Athlete videos are publicly readable from storage"
+  on storage.objects for select
+  using (bucket_id = 'athlete-videos');
+
+create policy "Authenticated users can upload athlete videos"
+  on storage.objects for insert
+  with check (bucket_id = 'athlete-videos' and auth.uid() is not null);
+
+create policy "Authenticated users can update athlete videos"
+  on storage.objects for update
+  using (bucket_id = 'athlete-videos' and auth.uid() is not null)
+  with check (bucket_id = 'athlete-videos' and auth.uid() is not null);

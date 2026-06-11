@@ -10,6 +10,7 @@ import {
   type NotificationItem,
   type UploadedVideo,
 } from '../../lib/platform';
+import { getSupabaseConfigStatus, uploadVideoToStorage } from '../../lib/supabase';
 
 interface AthleteDashboardProps {
   athlete: AthleteSummary;
@@ -42,12 +43,13 @@ export function AthleteDashboard({ athlete, onNavigateToTrials }: AthleteDashboa
   const [videos, setVideos] = useState<UploadedVideo[]>(() => listUploadedVideos());
   const [notifications, setNotifications] = useState<NotificationItem[]>(() => listNotifications());
   const [uploadMessage, setUploadMessage] = useState('');
-  const publicProfileUrl = `futurocraque.com/atleta/${athlete.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'perfil'}`;
+  const publicProfilePath = `/atleta/${athlete.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'perfil'}`;
+  const publicProfileUrl = `${window.location.origin}${publicProfilePath}`;
   const roleLabel = athlete.role === 'coach' ? 'Treinador' : athlete.role === 'scout' ? 'Olheiro' : 'Atleta';
 
   const shareProfile = async () => {
     try {
-      await navigator.clipboard.writeText(`https://${publicProfileUrl}`);
+      await navigator.clipboard.writeText(publicProfileUrl);
       setProfileMessage('Link publico copiado para area de transferencia.');
     } catch (error) {
       setProfileMessage(`Link publico: ${publicProfileUrl}`);
@@ -55,7 +57,7 @@ export function AthleteDashboard({ athlete, onNavigateToTrials }: AthleteDashboa
     }
   };
 
-  const uploadVideo = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const uploadVideo = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
 
     if (!file) {
@@ -72,8 +74,22 @@ export function AthleteDashboard({ athlete, onNavigateToTrials }: AthleteDashboa
       return;
     }
 
-    setVideos(saveUploadedVideo(file));
-    setUploadMessage('Video salvo no painel local. Com Supabase configurado, ele sera enviado para o Storage.');
+    const nextVideos = saveUploadedVideo(file);
+    setVideos(nextVideos);
+
+    if (!getSupabaseConfigStatus().configured) {
+      setUploadMessage('Video salvo no painel local. Configure Supabase para enviar ao Storage em producao.');
+      return;
+    }
+
+    try {
+      const safeName = file.name.toLowerCase().replace(/[^a-z0-9.]+/g, '-');
+      await uploadVideoToStorage(file, `${athlete.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}/${crypto.randomUUID()}-${safeName}`);
+      setUploadMessage('Video enviado para o Supabase Storage.');
+    } catch (error) {
+      setUploadMessage('Video salvo localmente, mas o envio ao Supabase falhou. Verifique bucket e politicas.');
+      logger.error('Falha no upload Supabase Storage', { context: 'AthleteDashboard', error });
+    }
   };
 
   return (

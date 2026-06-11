@@ -16,9 +16,10 @@ import { LoadingPage } from './components/system/LoadingPage';
 import { Seo } from './components/system/Seo';
 import { ErrorPage } from './components/system/ErrorPages';
 import { logger } from '../lib/logger';
+import { consumeOAuthSessionFromUrl, getSupabaseSession } from '../lib/supabase';
 import type { Course } from './components/CourseGrid';
 
-export type Page = 'home' | 'trials' | 'resources' | 'athletes' | 'dashboard' | 'support' | 'about' | 'parents' | 'clubs' | 'legal' | 'notFound' | 'serverError';
+export type Page = 'home' | 'trials' | 'resources' | 'athletes' | 'publicProfile' | 'dashboard' | 'support' | 'about' | 'parents' | 'clubs' | 'legal' | 'notFound' | 'serverError';
 export type UserRole = 'athlete' | 'coach' | 'scout';
 export interface AthleteSummary {
   name: string;
@@ -45,6 +46,7 @@ const AthleteDashboard = lazy(() => import('./components/AthleteDashboard').then
 const AthleteSearchPage = lazy(() => import('./components/AthleteSearchPage').then((module) => ({ default: module.AthleteSearchPage })));
 const ClubTrialsPage = lazy(() => import('./components/ClubTrialsPage').then((module) => ({ default: module.ClubTrialsPage })));
 const InfoPage = lazy(() => import('./components/InfoPage').then((module) => ({ default: module.InfoPage })));
+const PublicAthleteProfilePage = lazy(() => import('./components/PublicAthleteProfilePage').then((module) => ({ default: module.PublicAthleteProfilePage })));
 const ResourceHubPage = lazy(() => import('./components/ResourceHubPage').then((module) => ({ default: module.ResourceHubPage })));
 
 const pagePaths: Record<Page, string> = {
@@ -56,15 +58,23 @@ const pagePaths: Record<Page, string> = {
   legal: '/legal',
   notFound: '/404',
   parents: '/pais',
+  publicProfile: '/atleta',
   resources: '/recursos',
   serverError: '/500',
   support: '/suporte',
   trials: '/peneiras',
 };
 
-function pageFromPath(pathname: string): Page {
+function routeFromPath(pathname: string): { page: Page; slug?: string } {
+  if (pathname.startsWith('/atleta/')) {
+    return {
+      page: 'publicProfile',
+      slug: pathname.replace('/atleta/', '').split('/')[0],
+    };
+  }
+
   const match = Object.entries(pagePaths).find(([, path]) => path === pathname);
-  return match ? (match[0] as Page) : 'notFound';
+  return { page: match ? (match[0] as Page) : 'notFound' };
 }
 
 function readStoredAuth() {
@@ -78,10 +88,20 @@ function readStoredAuth() {
 export default function App() {
   const [activeTab, setActiveTab] = useState('todos');
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
-  const [currentPage, setCurrentPage] = useState<Page>(() => pageFromPath(window.location.pathname));
+  const [currentPage, setCurrentPage] = useState<Page>(() => routeFromPath(window.location.pathname).page);
+  const [publicProfileSlug, setPublicProfileSlug] = useState<string | undefined>(() => routeFromPath(window.location.pathname).slug);
   const [authMode, setAuthMode] = useState<'login' | 'signup' | null>(null);
   const [athlete, setAthlete] = useState<AthleteSummary>(defaultAthlete);
-  const [isAuthenticated, setIsAuthenticated] = useState(readStoredAuth);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => readStoredAuth() || Boolean(getSupabaseSession()));
+
+  useEffect(() => {
+    const oauthSession = consumeOAuthSessionFromUrl();
+    if (oauthSession) {
+      setIsAuthenticated(true);
+      setCurrentPage('dashboard');
+      logger.info('Sessao OAuth Supabase consumida', { context: 'App' });
+    }
+  }, []);
 
   useEffect(() => {
     try {
@@ -92,13 +112,21 @@ export default function App() {
   }, [isAuthenticated]);
 
   const navigate = (page: Page) => {
+    if (page === 'publicProfile') {
+      return;
+    }
+
     setCurrentPage(page);
     window.history.pushState({}, '', pagePaths[page]);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   useEffect(() => {
-    const handlePopState = () => setCurrentPage(pageFromPath(window.location.pathname));
+    const handlePopState = () => {
+      const route = routeFromPath(window.location.pathname);
+      setCurrentPage(route.page);
+      setPublicProfileSlug(route.slug);
+    };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
@@ -136,6 +164,7 @@ export default function App() {
         {currentPage === 'trials' && <ClubTrialsPage />}
         {currentPage === 'resources' && <ResourceHubPage onCreateProfile={() => setAuthMode('signup')} />}
         {currentPage === 'athletes' && <AthleteSearchPage currentRole={athlete.role} />}
+        {currentPage === 'publicProfile' && <PublicAthleteProfilePage slug={publicProfileSlug} onNavigate={navigate} />}
         {currentPage === 'dashboard' && <AthleteDashboard athlete={athlete} onNavigateToTrials={() => navigate('trials')} />}
         {currentPage === 'support' && <InfoPage type="support" onCreateProfile={() => setAuthMode('signup')} />}
         {currentPage === 'about' && <InfoPage type="about" onCreateProfile={() => setAuthMode('signup')} />}
